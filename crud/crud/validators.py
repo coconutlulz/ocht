@@ -1,5 +1,5 @@
 from copy import deepcopy
-from dataclasses import dataclass
+from dataclasses import dataclass, fields
 from enum import EnumMeta
 
 from cerberus import schema_registry
@@ -39,9 +39,10 @@ class Validator(CValidator):
         if len(model.__mro__) == 1:
             return
 
+        # FIXME: See if this is necessary
         temp_schema = deepcopy(model._validation_schema)
 
-        for field in model.__dataclass_fields__.values():
+        for field in fields(model):
             rules = temp_schema.get(field.name, {})
             if len(rules) > 0:
                 self._translate_field_rules(rules)

@@ -1,16 +1,22 @@
 # -*- coding: utf-8 -*-
-from dataclasses import dataclass, field, MISSING
+from dataclasses import dataclass, field, fields, MISSING
 from datetime import datetime
 from enum import Enum, unique
 
-from typing import Any, Union
+from typing import Union
 
+from .database import db
 from .utils import IDs, Names
 from .validators import Validator
 
 
 @dataclass
 class Model:
+    id: int
+    name: str
+
+    _validation_schema = {}
+
     key_format = "{model}:{id}:{attribute}"
 
     class DBCommands:
@@ -20,23 +26,39 @@ class Model:
         class Write:
             put = "SET {key}"
 
-
-    _validation_schema = {}
-
-    id: int = field(init=False, default_factory=IDs.generate_id)
-    name: str
-
     @staticmethod
-    def _add_extras(command: str, extras: list) -> str:
+    def _add_extras(command: str, extras: list = None) -> str:
         if extras is None:
             return command
-        return f"{command} {' '.join(str(e) for e in extras)}"
+        if isinstance(extras, list):
+            return f"{command} {' '.join(str(e) for e in extras)}"
+        return f"{command} {extras}"
 
     @classmethod
-    def _generate_key(cls, id: int, key_name: str):
-        return f"{cls.__name__}:{id}:{key_name}"
+    def _generate_key(cls, _id: int, key_name: str) -> str:
+        return f"{cls.__name__}:{_id}:{key_name}"
 
     @classmethod
+    @db
+    def multi_get(cls, _id: int, key_names: list[str] = None):
+        command = "MGET {keys}"
+        keys = []
+
+        if key_names is None:
+            key_names = [f.name for f in fields(cls)]
+
+        for key_name in key_names:
+            try:
+                getattr(cls.DBCommands.Read, key_name)
+                raise Exception("Can only use multi-get for GETs")
+            except:
+                keys.append(cls._generate_key(_id, key_name))
+
+        command = command.format(keys=' '.join(str(k) for k in keys))
+        return command
+
+    @classmethod
+    @db
     def get(cls, id: int, key_name: str, extras: Union[list, tuple] = None) -> str:
         key = cls._generate_key(id, key_name)
         try:
@@ -45,10 +67,10 @@ class Model:
             command = cls.DBCommands.Read.get
 
         command = command.format(key=key)
-
         return cls._add_extras(command, extras)
 
     @classmethod
+    @db
     def put(cls, id: int, key_name: str, extras: Union[list, tuple] = None) -> str:
         key = cls._generate_key(id, key_name)
         try:
@@ -59,47 +81,59 @@ class Model:
         command = command.format(key=key)
         return cls._add_extras(command, extras)
 
+    @db
+    def put_model(self):
+        for f in fields(self):
+            if f.name != "id":
+                extras = getattr(self, f.name)
+                if not extras:
+                    continue
+                self._commands.append(self.put(self.id, f.name, extras=extras))
+
     @classmethod
-    def new(cls, *args, **kwargs):
-        try:
-            return cls(*args, **kwargs)
-        except TypeError as e:
-            pass
+    def new(cls, *args, id: int = None, **kwargs):
+        if id is not None:
+            mget_result = cls.multi_get(id)
+            print("lol")
+        else:
+            cls(*args, id=IDs.generate_id(), **kwargs)
 
     def _validate(self):
         self._validator.validate()
 
     def __post_init__(self, *args, **kwargs):
         self._validator = Validator(self)
+        self._commands = []
+        self.put_model()
 
 
 @dataclass
 class Sport(Model):
-    class DBCommands(Model.DBCommands):
-        class Read(Model.DBCommands.Read):
-            active = "GETBIT {key}"
-
-        class Write(Model.DBCommands.Write):
-            active = "SETBIT {key}"
-
-    events: list = field(default_factory=[])
+    events: list = field(default_factory=list)
 
     active: bool = False
     slug: str = field(init=False)
+
+    class DBCommands(Model.DBCommands):
+        class Read(Model.DBCommands.Read):
+            pass
+
+        class Write(Model.DBCommands.Write):
+            events = "LPUSH {key}"
 
     _validation_schema = {
         "events": {"items": [{"type": "integer"}]}
     }
 
     @property
-    def is_active(self):
+    def is_active(self) -> str:
         return self.get(self.id, "active")
 
-    def activate(self):
-        self.put(self.id, "active", (1,))
+    def activate(self) -> str:
+        return self.put(self.id, "active", (1,))
 
-    def deactivate(self):
-        self.put(self.id, "active", (0,))
+    def deactivate(self) -> str:
+        return self.put(self.id, "active", (0,))
 
     def __post_init__(self, *args, **kwargs):
         self.slug = Names.generate_slug(self.name)
@@ -125,7 +159,7 @@ class Event(Model):
     status: int
     scheduled_start: datetime
 
-    selections: list = field(default_factory=[])
+    selections: list = field(default_factory=list)
 
     slug: str = field(init=False)
     actual_start: datetime = field(init=False)
