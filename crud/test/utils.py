@@ -1,7 +1,7 @@
-from datetime import datetime
+from datetime import datetime, timedelta
 import random
 
-from crud.crud.models import Sport, Event, Selection, connection
+from crud.models import Sport, Event, Selection, connection
 
 
 def get_random_sport():
@@ -24,7 +24,7 @@ def create_events(sports, n=20):
         status = random.choice(statuses)
         event = Event.new(
             name=f"Event {index}",
-            scheduled_start=datetime.utcnow(),
+            scheduled_start=datetime.utcnow() + timedelta(days=500 * 500),
             sport=sports[sport_index].id,
             type=type,
             status=status

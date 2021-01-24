@@ -1,10 +1,10 @@
 import unittest
 
-from crud.crud.controllers import SportController
-from crud.crud.errors import InstantiationException
-from crud.crud.models import Sport, Event, Selection
-from crud.crud.views import SportView
-from crud.test.utils import check_ascii, flush_all_dbs, generate_test_db
+from crud.controllers import SportController
+from crud.errors import InstantiationException
+from crud.models import Sport
+from crud.views import SportView
+from test.utils import check_ascii, flush_all_dbs, generate_test_db
 
 
 class TestSportModel(unittest.TestCase):

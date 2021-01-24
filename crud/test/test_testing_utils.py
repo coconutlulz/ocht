@@ -1,6 +1,6 @@
 import unittest
 
-from crud.test.utils import (
+from test.utils import (
     flush_all_dbs,
     generate_test_db,
     create_events,

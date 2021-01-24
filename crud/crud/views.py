@@ -1,16 +1,18 @@
 import operator
 import re
 
-from .errors import FilterException
+from .errors import FilterException, MissingResultException
 from .models import Sport, Event, Selection, connection
 
 scan_count = 50
 
 
-def get_by_glob(model_type, pattern: str):
+def get_by_glob(model_type: str, pattern: str):
     all_keys = connection.execute_command(
         "KEYS", f"{model_type}:*:name"
     )
+    if len(all_keys) == 0:
+        raise MissingResultException("Database appears to be empty.")
     decoded = " ".join([k.decode("utf-8") for k in all_keys])
     ids = [str(k).split(":")[1] for k in all_keys]
     names = [

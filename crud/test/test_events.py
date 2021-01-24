@@ -1,11 +1,11 @@
 from datetime import datetime, timedelta
 import unittest
 
-from crud.crud.controllers import EventController, SportController
-from crud.crud.errors import ForeignKeyException, InstantiationException
-from crud.crud.models import Sport, Event, Selection
-from crud.crud.utils import get_current_time
-from crud.test.utils import check_ascii, flush_all_dbs, generate_test_db
+from crud.controllers import EventController, SportController
+from crud.errors import ForeignKeyException, InstantiationException
+from crud.models import Sport, Event, Selection
+from crud.utils import get_current_time
+from test.utils import flush_all_dbs, generate_test_db
 
 
 class TestEventModel(unittest.TestCase):

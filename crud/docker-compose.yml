@@ -1,0 +1,7 @@
+version: "3.8"
+services:
+  keydb:
+    container_name: "keydb"
+    image: eqalpha/keydb
+    ports:
+      - "6379:6379"

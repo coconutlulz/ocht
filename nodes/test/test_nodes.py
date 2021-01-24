@@ -1,6 +1,6 @@
 import unittest
 
-from ..nodes.nodes import find_internal_nodes_num
+from nodes.nodes import find_internal_nodes_num
 
 
 class TestInternalNodesCounting(unittest.TestCase):
