@@ -5,7 +5,6 @@ from cerberus import schema_registry
 from cerberus import Validator as CValidator
 
 from .errors import CoercionError, ValidationError
-from .utils import log
 
 
 type_table = {
@@ -20,7 +19,7 @@ class Validator(CValidator):
     rounding_places = 2
 
     def _normalize_coerce_custom_round(self, value):
-        return round(value, self.rounding_places)
+        return round(float(value), self.rounding_places)
 
     @staticmethod
     def _translate_type(t: type):

@@ -111,7 +111,7 @@ class Model:
             write_func = cls.Write.Commands.set
 
         command = write_func(key)
-        command = f"{command} {value}"
+        command = cls._add_extras(command, value)
 
         if key_name in cls._foreign_keys:
             cls._resolve_foreign_keys(key_name, value)
@@ -288,7 +288,7 @@ class Event(Model):
 
             @staticmethod
             def selections(value):
-                return value
+                return [int(id) for id in value]
 
     class Write(Model.Write):
         class Commands(Model.Write.Commands):
