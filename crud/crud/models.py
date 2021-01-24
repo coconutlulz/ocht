@@ -5,7 +5,7 @@ from datetime import datetime
 from enum import Enum, unique
 
 from .database import connection
-from .errors import ForeignKeyException
+from .errors import ForeignKeyException, InstantiationException
 from .utils import IDs, Names, log
 from .validators import Validator
 
@@ -61,7 +61,6 @@ class Model:
         if value is None:
             return connection.execute_command(command)
         return connection.execute_command(command, value)
-
 
     @classmethod
     def _resolve_foreign_keys(cls, key_name: str, ids):
@@ -148,6 +147,10 @@ class Model:
     @classmethod
     def new(cls, *args, id: int = None, **kwargs):
         if id is not None:
+            if len(args) > 0 or len(kwargs) > 0:
+                raise InstantiationException(
+                    f"Cannot instantiate new model with id specified alongside other parameters."
+                )
             return cls.load(id)
         else:
             return cls(*args, id=IDs.generate_id(), **kwargs)
@@ -163,6 +166,15 @@ class Model:
         for attr_name, value in post_init:
             setattr(inst, attr_name, value)
         return inst
+
+    def update(self, **kwargs):
+        for attr_name in (f.name for f in fields(self) if f.name not in self._excluded):
+            if hasattr(self, attr_name):
+                try:
+                    setattr(self, attr_name, kwargs[attr_name])
+                except KeyError:
+                    pass
+        return self
 
     def __post_init__(self, *args, **kwargs):
         Validator(self).validate()

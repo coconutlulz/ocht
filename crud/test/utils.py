@@ -6,7 +6,6 @@ from crud.crud.models import Sport, Event, Selection, connection
 
 def get_random_sport():
     result = connection.execute_command("KEYS", "sport:*")
-    print()
 
 
 def create_sports(n=10):
@@ -68,6 +67,10 @@ def generate_test_db():
     sports = [s for s in create_sports()]
     events = [e for e in create_events(sports)]
     selections = [s for s in create_selections(events)]
+
+
+def check_ascii(string):
+    return all(ord(char) < 128 for char in string)
 
 
 if __name__ == "__main__":

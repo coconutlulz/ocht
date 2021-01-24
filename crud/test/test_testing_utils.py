@@ -1,6 +1,5 @@
 import unittest
 
-from crud.crud.models import connection
 from crud.test.utils import (
     flush_all_dbs,
     generate_test_db,

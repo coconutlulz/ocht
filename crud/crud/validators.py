@@ -4,7 +4,7 @@ from enum import EnumMeta
 from cerberus import schema_registry
 from cerberus import Validator as CValidator
 
-from .errors import CoercionError, ValidationError
+from .errors import CoercionException, ValidationException
 
 
 type_table = {
@@ -45,7 +45,7 @@ class Validator(CValidator):
         try:
             rules["coerce"] = field.type
         except KeyError:
-            raise CoercionError(f"Couldn't find type {field.type}")
+            raise CoercionException(f"Couldn't find type {field.type}")
 
     def _translate_schema(self, model: type):
         if len(model.__mro__) == 1:
@@ -81,7 +81,7 @@ class Validator(CValidator):
             self._model.__dict__,
             schema=self._base_schema
         ):
-            raise ValidationError(
+            raise ValidationException(
                 f"Failed to validate fields in model creation. "
                 f"{self.errors} "
                 f"{self._errors}"

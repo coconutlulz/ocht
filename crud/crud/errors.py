@@ -2,6 +2,10 @@ class DBException(Exception):
     pass
 
 
+class InstantiationException(Exception):
+    pass
+
+
 class MissingResultException(DBException):
     pass
 
@@ -10,9 +14,9 @@ class ForeignKeyException(DBException):
     pass
 
 
-class ValidationError(Exception):
+class ValidationException(Exception):
     pass
 
 
-class CoercionError(ValidationError):
+class CoercionException(ValidationException):
     pass
