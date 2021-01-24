@@ -69,9 +69,9 @@ class EventController:
         sport = SportView.get_sport(sport_id)
 
         for event_id in sport.events:
-            event = EventView.get_event(event_id)
-            if event.active:
-                return
+            sub_event = EventView.get_event(event_id)
+            if sub_event.active:
+                return event
         sport.deactivate()
         return event
 
@@ -100,9 +100,9 @@ class SelectionController:
         event = EventView.get_event(selection.event)
 
         for selection_id in event.selections:
-            selection = SelectionView.get_selection(selection_id)
-            if selection.active:
-                return
+            sub_selection = SelectionView.get_selection(selection_id)
+            if sub_selection.active:
+                return event
         event.deactivate()
         return selection
 
