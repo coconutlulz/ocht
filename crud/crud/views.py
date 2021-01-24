@@ -116,9 +116,10 @@ class EventView:
         return Event.new(id=event_id)
 
     @staticmethod
-    def get_events_by_regex(pattern: str):
-        for event_id in get_by_glob("event", pattern):
-            yield EventView.get_event(event_id)
+    def get_events_filtered(filter_string: str):
+        filter = Filter("event", filter_string)
+        results = filter.filter()
+        return results
 
 
 class SelectionView:
@@ -127,6 +128,7 @@ class SelectionView:
         return Selection.new(id=selection_id)
 
     @staticmethod
-    def get_selections_by_regex(pattern: str):
-        for selection_id in get_by_glob("selection", pattern):
-            yield SelectionView.get_selection(selection_id)
+    def get_selections_filtered(filter_string: str):
+        filter = Filter("selection", filter_string)
+        results = filter.filter()
+        return results
