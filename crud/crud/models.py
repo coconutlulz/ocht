@@ -212,7 +212,7 @@ class Sport(Model):
         class Converters(Model.Read.Converters):
             @staticmethod
             def active(value):
-                return bool(value)
+                return bool(int(value))
 
             @staticmethod
             def events(value):
@@ -243,11 +243,13 @@ class Sport(Model):
     def is_active(self) -> str:
         return self.get(self.id, "active")
 
-    def activate(self) -> str:
-        return self.put(self.id, "active", True)
+    def activate(self):
+        self.active = True
+        self.put_model()
 
-    def deactivate(self) -> str:
-        return self.put(self.id, "active", False)
+    def deactivate(self):
+        self.active = False
+        self.put_model()
 
     def __post_init__(self, *args, **kwargs):
         self.slug = Names.generate_slug(self.name)
@@ -301,7 +303,7 @@ class Event(Model):
         class Converters(Model.Read.Converters):
             @staticmethod
             def active(value):
-                return bool(value)
+                return bool(int(value))
 
             @classmethod
             def actual_start(cls, value):
@@ -389,7 +391,7 @@ class Selection(Model):
         class Converters(Model.Read.Converters):
             @staticmethod
             def active(value):
-                return bool(value)
+                return bool(int(value))
 
             @staticmethod
             def event(value):

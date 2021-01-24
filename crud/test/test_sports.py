@@ -29,18 +29,18 @@ class TestSportsView(unittest.TestCase):
         flush_all_dbs()
 
     def test_get_by_glob(self):
-        all_sports = SportView.get_sports_filtered(
+        all_sports = SportView.get_sport_filtered(
             "events:<<5"
         )
         self.assertEqual(len(all_sports), 11)
 
-        base_ten_sports = SportView.get_sports_filtered(
+        base_ten_sports = SportView.get_sport_filtered(
             "regex:^Sport 1+"
         )
         self.assertEqual(len(base_ten_sports), 2)
 
         with self.assertRaises(AttributeError):
-            SportView.get_sports_filtered(
+            SportView.get_sport_filtered(
                 "selections:>=6"
             )
 

@@ -25,6 +25,12 @@ class SportController:
         sport.put_model()
         return sport
 
+    @staticmethod
+    def deactivate_sport(sport_id: int):
+        sport = SportView.get_sport(sport_id)
+        sport.deactivate()
+        return sport
+
 
 class EventController:
     @staticmethod
@@ -67,6 +73,7 @@ class EventController:
             if event.active:
                 return
         sport.deactivate()
+        return event
 
 
 class SelectionController:
@@ -76,6 +83,13 @@ class SelectionController:
             name=name, event=event, price=price, outcome=outcome
         )
         return new_selection
+
+    @staticmethod
+    def update_selection(selection_id: int, **kwargs):
+        selection = SelectionView.get_selection(selection_id)
+        selection.update(**kwargs)
+        selection.put_model()
+        return selection
 
     @staticmethod
     def deactivate_selection(selection_id: int):
@@ -90,3 +104,11 @@ class SelectionController:
             if selection.active:
                 return
         event.deactivate()
+        return selection
+
+
+controller_mapping = {
+    "sport": SportController,
+    "event": EventController,
+    "selection": SelectionController
+}

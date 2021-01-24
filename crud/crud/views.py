@@ -1,3 +1,4 @@
+import operator
 import re
 
 from .errors import FilterException
@@ -25,12 +26,12 @@ def get_by_glob(model_type, pattern: str):
 
 
 class Filter:
-    comparison = {
-        "<<": "__lt__",
-        "<=": "__le__",
-        ">>": "__gt__",
-        ">=": "__ge__",
-        "==": "__eq__",
+    comparisons = {
+        "<<": operator.lt,
+        "<=": operator.le,
+        ">>": operator.gt,
+        ">=": operator.ge,
+        "==": operator.eq
     }
 
     def __init__(self, model_type, filter_string):
@@ -56,19 +57,14 @@ class Filter:
         ]
 
     def _model_attribute(self, param, attribute: str):
-        operator = param[:2]
+        op = param[:2]
         operand = float(param[2:])
 
-        operator_func = self.comparison[operator]
+        operator_func = self.comparisons[op]
 
         self._results = [
             model for model in self._results if
-            getattr(
-                len(
-                    getattr(model, attribute)
-                ),
-                operator_func
-            )(operand)
+            operator_func(len(getattr(model, attribute)), operand)
         ]
 
     def events(self, param):
@@ -78,22 +74,21 @@ class Filter:
         self._model_attribute(param, "selections")
 
     def filter(self):
-        filter_strings = self._filter_string.split("AND")
+        filter_strings = self._filter_string.split(" AND ")
 
         for filter_string in filter_strings:
-            self._filters = filter_string.split(":")
+            self._filters.append(filter_string.split(":"))
 
         self._results = list(self._regex(".*"))
 
-        for filter_string in filter_strings:
-            filter_type, param = filter_string.split(":")
+        for filter_operation, filter_operand in self._filters:
             try:
-                filter_func = getattr(self, filter_type)
+                filter_func = getattr(self, filter_operation)
             except AttributeError:
                 raise FilterException(
-                    f"Specified filter not found: {filter_type}"
+                    f"Specified filter not found: {filter_operation}"
                 )
-            filter_func(param)
+            filter_func(filter_operand)
 
         return self._results
 
@@ -104,7 +99,7 @@ class SportView:
         return Sport.new(id=sport_id)
 
     @staticmethod
-    def get_sports_filtered(filter_string: str):
+    def get_sport_filtered(filter_string: str):
         filter = Filter("sport", filter_string)
         results = filter.filter()
         return results
@@ -132,3 +127,10 @@ class SelectionView:
         filter = Filter("selection", filter_string)
         results = filter.filter()
         return results
+
+
+view_mapping = {
+    "sport": SportView,
+    "event": EventView,
+    "selection": SelectionView
+}
