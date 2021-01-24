@@ -1,7 +1,24 @@
 # -*- coding: utf-8 -*-
+from datetime import datetime
 from uuid import uuid1
 
 from slugify import slugify
+
+
+# The time used throughout any operation should be the time at which the operation began.
+current_time = None
+
+
+def get_current_time():
+    global current_time
+    if current_time is None:
+        set_current_time()
+    return current_time
+
+
+def set_current_time():
+    global current_time
+    current_time = datetime.utcnow()
 
 
 class IDs:

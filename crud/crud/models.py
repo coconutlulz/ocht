@@ -28,7 +28,9 @@ class Model:
         class Converters:
             @staticmethod
             def _all(value):
-                return value
+                if value is None:
+                    return
+                return value.decode("utf-8")
 
     class Write:
         class Commands:
@@ -70,9 +72,8 @@ class Model:
         command = read_func(key)
         result = cls._exec(command)
 
-        convert = getattr(cls.Read.Converters, key_name, None)
-        if convert is not None:
-            result = convert(result)
+        convert = getattr(cls.Read.Converters, key_name, cls.Read.Converters._all)
+        result = convert(result)
         return result
 
     @classmethod
@@ -95,8 +96,13 @@ class Model:
         return result
 
     @classmethod
-    def get_model(cls, id: int):
+    def get_model(cls, id: int, post: list):
         for f in fields(cls):
+            if not f.init and f.name not in cls._excluded:
+                post.append(
+                    (f.name, cls.get(id, f.name),)
+                )
+
             if f.name in cls._excluded or not f.init:
                 continue
             yield f.name, cls.get(id, f.name)
@@ -106,10 +112,12 @@ class Model:
             if f.name in self._excluded:
                 continue
 
-            value = getattr(self, f.name)
-            if not value:
+            try:
+                value = getattr(self, f.name)
+                if value:
+                    self.put(self.id, f.name, value)
+            except AttributeError:
                 continue
-            self.put(self.id, f.name, value)
 
     @classmethod
     def new(cls, *args, id: int = None, **kwargs):
@@ -120,10 +128,15 @@ class Model:
 
     @classmethod
     def load(cls, id):
+        post_init = []
         kwargs = {
-            field_name: value for field_name, value in cls.get_model(id)
+            field_name: value for field_name, value in cls.get_model(id, post_init)
         }
-        return cls(id=id, **kwargs)
+        inst = cls(id=id, **kwargs)
+
+        for attr_name, value in post_init:
+            setattr(inst, attr_name, value)
+        return inst
 
     def _validate(self):
         self._validator.validate()
@@ -137,16 +150,26 @@ class Model:
 
 @dataclass
 class Sport(Model):
+    _excluded = ("id", "slug",)
     events: list = field(default_factory=list)
 
     active: bool = False
     slug: str = field(init=False)
 
     class Read(Model.Read):
+        class Commands(Model.Read.Commands):
+            @staticmethod
+            def events(key):
+                return f"LRANGE {key} 0 -1"
+
         class Converters(Model.Read.Converters):
             @staticmethod
             def active(value):
                 return bool(value)
+
+            @staticmethod
+            def events(value):
+                return value
 
     class Write(Model.Write):
         class Commands(Model.Write.Commands):
@@ -158,6 +181,12 @@ class Sport(Model):
             @staticmethod
             def active(value):
                 return int(value)
+
+            @staticmethod
+            def events(value):
+                if value is None:
+                    return []
+                return value
 
     _validation_schema = {
         "events": {"items": [{"type": "integer"}]}
@@ -196,12 +225,14 @@ class Event(Model):
     sport: int
     status: int
     scheduled_start: datetime
+    actual_start: datetime = field(init=False)
 
     selections: list = field(default_factory=list)
 
     slug: str = field(init=False)
-    actual_start: datetime = field(init=False)
     active: bool = False
+
+    _excluded = ("id", "slug",)
 
     _validation_schema = {
         "type": {"allowed": Types},
@@ -210,8 +241,51 @@ class Event(Model):
         "selections": {"items": [{"type": "integer"}]}
     }
 
+    class Read(Model.Read):
+        class Commands(Model.Read.Commands):
+            @staticmethod
+            def selections(key):
+                return f"LRANGE {key} 0 -1"
+
+        class Converters(Model.Read.Converters):
+            @classmethod
+            def actual_start(cls, value):
+                if value is None:
+                    return None
+                return cls.scheduled_start(value)
+
+            @staticmethod
+            def scheduled_start(value):
+                return datetime.fromtimestamp(float(value))
+
+            @staticmethod
+            def selections(value):
+                return value
+
+    class Write(Model.Write):
+        class Commands(Model.Write.Commands):
+            @staticmethod
+            def selections(key):
+                return f"LPUSH {key}"
+
+        class Converters(Model.Write.Converters):
+            @classmethod
+            def actual_start(cls, value):
+                if value is None or value == MISSING:
+                    return "None"
+                return cls.scheduled_start(value)
+
+            @staticmethod
+            def scheduled_start(value):
+                return value.timestamp()
+
+            @staticmethod
+            def selections(value):
+                if value is None:
+                    return []
+                return value
+
     def __post_init__(self, *args, **kwargs):
-        self.actual_start = MISSING
         self.slug = Names.generate_slug(self.name)
         super().__post_init__(*args, **kwargs)
 

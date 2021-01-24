@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 from keydb import ConnectionPool, KeyDB
 
 pool = ConnectionPool(host='127.0.0.1')
