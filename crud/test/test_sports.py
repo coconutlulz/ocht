@@ -22,10 +22,12 @@ class TestSportModel(unittest.TestCase):
 
 class TestSportsController(unittest.TestCase):
     def setUp(self):
-        generate_test_db()
+        pass
+        #generate_test_db()
 
     def tearDown(self):
-        flush_all_dbs()
+        pass
+        #flush_all_dbs()
 
     def test_sport_creation(self):
         new_sport = SportController.create_sport("test_sport", active=True)

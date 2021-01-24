@@ -139,8 +139,9 @@ class Model:
 
             try:
                 value = getattr(self, f.name)
-                if value:
-                    self.put(self.id, f.name, value)
+                if isinstance(value, list) or value is None or value == MISSING:
+                    continue
+                self.put(self.id, f.name, value)
             except AttributeError:
                 continue
 
@@ -290,6 +291,10 @@ class Event(Model):
                 return f"LRANGE {key} 0 -1"
 
         class Converters(Model.Read.Converters):
+            @staticmethod
+            def active(value):
+                return bool(value)
+
             @classmethod
             def actual_start(cls, value):
                 if value is None:
@@ -304,6 +309,18 @@ class Event(Model):
             def selections(value):
                 return [int(id) for id in value]
 
+            @staticmethod
+            def sport(value):
+                return int(value)
+
+            @staticmethod
+            def status(value):
+                return int(value)
+
+            @staticmethod
+            def type(value):
+                return int(value)
+
     class Write(Model.Write):
         class Commands(Model.Write.Commands):
             @staticmethod
@@ -311,6 +328,10 @@ class Event(Model):
                 return f"LPUSH {key}"
 
         class Converters(Model.Write.Converters):
+            @staticmethod
+            def active(value):
+                return int(value)
+
             @classmethod
             def actual_start(cls, value):
                 if value is None or value == MISSING:

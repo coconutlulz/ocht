@@ -11,10 +11,12 @@ from crud.test.utils import (
 
 class TestTestingUtils(unittest.TestCase):
     def setUp(self):
-        generate_test_db()
+        pass
+        #generate_test_db()
 
     def tearDown(self):
-        flush_all_dbs()
+        pass
+        #flush_all_dbs()
 
     def test_create_sports(self):
         n = 10
