@@ -26,6 +26,8 @@ docker-compose -f docker-compose.yml up -d
 pip install --upgrade -r requirements.txt
 ```
 
+The database will listen on port 6379.
+
 Generate a test DB with:
 ```
 python -m test.utils generate_test_db
