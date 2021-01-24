@@ -1,12 +1,10 @@
-import functools
-import time
-
 from keydb import ConnectionPool, KeyDB
 
 pool = ConnectionPool(host='127.0.0.1')
 connection = KeyDB(connection_pool=pool)
 
 
+"""
 def transaction(f):
     @functools.wraps(f)
     def wrapper(*args, **kwargs):
@@ -17,7 +15,6 @@ def transaction(f):
                 connection.execute_command("MULTI")
                 f(*args, **kwargs)
                 result = connection.execute_command("EXEC")
-                print("wat")
                 success = True
             except Exception as e:
                 print(f"Transaction failed: {e}")
@@ -38,3 +35,4 @@ def db(f):
             connection.execute_command(c)
         return command
     return wrapper
+"""
