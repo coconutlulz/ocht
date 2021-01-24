@@ -298,7 +298,7 @@ class Event(Model):
 
             @staticmethod
             def scheduled_start(value):
-                return datetime.fromtimestamp(float(value))
+                return datetime.utcfromtimestamp(float(value))
 
             @staticmethod
             def selections(value):
