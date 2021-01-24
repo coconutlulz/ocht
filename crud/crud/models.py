@@ -71,13 +71,13 @@ class Model:
                 if result is None:
                     raise ForeignKeyException(
                         f"Could not resolve foreign key."
-                        f"key_name={key_name} {k}={k} cls={cls}"
+                        f"key_name={key_name} k={k} cls={cls}"
                     )
             except:
                 log.exception(f"Something went wrong while attempting to resolve foreign keys.")
                 raise
 
-        if not isinstance(ids, (Iterable, str,)):
+        if not isinstance(ids, Iterable) or isinstance(ids, str):
             ids = [ids]
         for i in ids:
             _resolve(i)
@@ -162,14 +162,10 @@ class Model:
             setattr(inst, attr_name, value)
         return inst
 
-    def _validate(self):
-        self._validator.validate()
-
     def __post_init__(self, *args, **kwargs):
-        self._validator = Validator(self)
+        Validator(self).validate()
         self._commands = []
-        print("__post_init__ put_model")
-        self.put_model()
+        self.put_model()  # FIXME Do not put if the model has just been read from DB.
 
 
 @dataclass
@@ -217,7 +213,7 @@ class Sport(Model):
                 return value
 
     _validation_schema = {
-        "events": {"items": [{"type": "integer"}]}
+        "events": {"schema": {"type": "integer"}}
     }
 
     @property
@@ -270,7 +266,7 @@ class Event(Model):
         "type": {"allowed": Types},
         "status": {"allowed": Statuses},
         "scheduled_start": {"min": datetime.utcnow()},
-        "selections": {"items": [{"type": "integer"}]}
+        "selections": {"schema": {"type": "integer"}}
     }
 
     class Read(Model.Read):
@@ -324,6 +320,10 @@ class Event(Model):
 
 @dataclass
 class Selection(Model):
+    _foreign_keys = {
+        "event": "event"
+    }
+
     @unique
     class Outcomes(Enum):
         UNSETTLED = 0

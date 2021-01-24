@@ -8,3 +8,11 @@ class MissingResultException(DBException):
 
 class ForeignKeyException(DBException):
     pass
+
+
+class ValidationError(Exception):
+    pass
+
+
+class CoercionError(ValidationError):
+    pass
