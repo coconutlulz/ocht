@@ -5,7 +5,7 @@ from datetime import datetime
 from enum import Enum, unique
 
 from .database import connection
-from .errors import DBException, MissingResultException, ForeignKeyException
+from .errors import ForeignKeyException
 from .utils import IDs, Names, log
 from .validators import Validator
 
@@ -50,15 +50,18 @@ class Model:
             return command
         if isinstance(extras, list):
             return f"{command} {' '.join(str(e) for e in extras)}"
-        return f"{command} {extras}"
+        return f"{command} '{extras}'"
 
     @classmethod
     def _generate_key(cls, id: int, key_name: str) -> str:
         return f"{cls.__name__.lower()}:{id}:{key_name}"
 
     @classmethod
-    def _exec(cls, command: str):
-        return connection.execute_command(command)
+    def _exec(cls, command: str, value=None):
+        if value is None:
+            return connection.execute_command(command)
+        return connection.execute_command(command, value)
+
 
     @classmethod
     def _resolve_foreign_keys(cls, key_name: str, ids):
@@ -111,12 +114,11 @@ class Model:
             write_func = cls.Write.Commands.set
 
         command = write_func(key)
-        command = cls._add_extras(command, value)
 
         if key_name in cls._foreign_keys:
             cls._resolve_foreign_keys(key_name, value)
 
-        result = cls._exec(command)
+        result = cls._exec(command, value)
         return result
 
     @classmethod
@@ -338,6 +340,6 @@ class Selection(Model):
     active: bool = False
 
     _validation_schema = {
-        "price": {"coerce": "custom_round"},
+        "price": {"coerce": "custom_round", "min": 0.00},
         "outcome": {"allowed": Outcomes}
     }
