@@ -1,4 +1,7 @@
-import logging
+from logging import getLogger, DEBUG
+
+log = getLogger("CRUD")
+log.setLevel(DEBUG)
 
 root_node = -1
 
@@ -14,7 +17,7 @@ def find_internal_nodes_num(tree: list) -> int:
     try:
         tree_set.remove(root_node)  # Remove root node entry as it points to outside the tree.
     except KeyError:
-        logging.debug(
+        log.debug(
             f"Couldn't remove root node from tree as the node does not exist."
             f"root_node={root_node} tree={tree}"
         )
