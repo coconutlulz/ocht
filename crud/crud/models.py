@@ -1,10 +1,12 @@
 # -*- coding: utf-8 -*-
+from collections.abc import Iterable
 from dataclasses import dataclass, field, fields, MISSING
 from datetime import datetime
 from enum import Enum, unique
 
 from .database import connection
-from .utils import IDs, Names
+from .errors import DBException, MissingResultException, ForeignKeyException
+from .utils import IDs, Names, log
 from .validators import Validator
 
 
@@ -14,6 +16,7 @@ class Model:
     name: str
 
     _excluded = ("id",)
+    _foreign_keys = {}
 
     _validation_schema = {}
 
@@ -51,15 +54,33 @@ class Model:
 
     @classmethod
     def _generate_key(cls, id: int, key_name: str) -> str:
-        return f"{cls.__name__}:{id}:{key_name}"
+        return f"{cls.__name__.lower()}:{id}:{key_name}"
 
     @classmethod
     def _exec(cls, command: str):
-        try:
-            return connection.execute_command(command)
-        except Exception as e:
-            print("exception: {}".format(e))
-        raise Exception("NO RESULT FROM DB")
+        return connection.execute_command(command)
+
+    @classmethod
+    def _resolve_foreign_keys(cls, key_name: str, ids):
+        key_name = cls._foreign_keys[key_name]
+
+        def _resolve(k):
+            command = f"{cls.Read.Commands.get(key_name)}:{k}:name"
+            try:
+                result = connection.execute_command(command)
+                if result is None:
+                    raise ForeignKeyException(
+                        f"Could not resolve foreign key."
+                        f"key_name={key_name} {k}={k} cls={cls}"
+                    )
+            except:
+                log.exception(f"Something went wrong while attempting to resolve foreign keys.")
+                raise
+
+        if not isinstance(ids, (Iterable, str,)):
+            ids = [ids]
+        for i in ids:
+            _resolve(i)
 
     @classmethod
     def get(cls, id: int, key_name: str):
@@ -91,6 +112,9 @@ class Model:
 
         command = write_func(key)
         command = f"{command} {value}"
+
+        if key_name in cls._foreign_keys:
+            cls._resolve_foreign_keys(key_name, value)
 
         result = cls._exec(command)
         return result
@@ -151,6 +175,10 @@ class Model:
 @dataclass
 class Sport(Model):
     _excluded = ("id", "slug",)
+    _foreign_keys = {
+        "events": "event"
+    }
+
     events: list = field(default_factory=list)
 
     active: bool = False
@@ -233,6 +261,10 @@ class Event(Model):
     active: bool = False
 
     _excluded = ("id", "slug",)
+    _foreign_keys = {
+        "selections": "selection",
+        "sport": "sport"
+    }
 
     _validation_schema = {
         "type": {"allowed": Types},

@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 from datetime import datetime
+from logging import getLogger, DEBUG
 from uuid import uuid1
 
 from slugify import slugify
@@ -7,6 +8,9 @@ from slugify import slugify
 
 # The time used throughout any operation should be the time at which the operation began.
 current_time = None
+
+log = getLogger("CRUD")
+log.setLevel(DEBUG)
 
 
 def get_current_time():
