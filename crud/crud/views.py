@@ -1,5 +1,6 @@
 import re
 
+from .errors import FilterException
 from .models import Sport, Event, Selection, connection
 
 scan_count = 50
@@ -23,15 +24,90 @@ def get_by_glob(model_type, pattern: str):
             yield int(id)
 
 
+class Filter:
+    comparison = {
+        "<<": "__lt__",
+        "<=": "__le__",
+        ">>": "__gt__",
+        ">=": "__ge__",
+        "==": "__eq__",
+    }
+
+    def __init__(self, model_type, filter_string):
+        self._model_type = model_type
+        self._filter_string = filter_string
+        self._filters = []
+        self._results = self._regex(".*")
+
+    def _regex(self, pattern):
+        for model_id in get_by_glob(self._model_type, pattern):
+            if self._model_type == "sport":
+                yield SportView.get_sport(model_id)
+            elif self._model_type == "event":
+                yield EventView.get_event(model_id)
+            elif self._model_type == "selection":
+                yield SelectionView.get_selection(model_id)
+
+    def regex(self, pattern):
+        r = re.compile(pattern)
+        self._results = [
+            model for model in self._results
+            if r.match(model.name) is not None
+        ]
+
+    def _model_attribute(self, param, attribute: str):
+        operator = param[:2]
+        operand = float(param[2:])
+
+        operator_func = self.comparison[operator]
+
+        self._results = [
+            model for model in self._results if
+            getattr(
+                len(
+                    getattr(model, attribute)
+                ),
+                operator_func
+            )(operand)
+        ]
+
+    def events(self, param):
+        self._model_attribute(param, "events")
+
+    def selections(self, param):
+        self._model_attribute(param, "selections")
+
+    def filter(self):
+        filter_strings = self._filter_string.split("AND")
+
+        for filter_string in filter_strings:
+            self._filters = filter_string.split(":")
+
+        self._results = list(self._regex(".*"))
+
+        for filter_string in filter_strings:
+            filter_type, param = filter_string.split(":")
+            try:
+                filter_func = getattr(self, filter_type)
+            except AttributeError:
+                raise FilterException(
+                    f"Specified filter not found: {filter_type}"
+                )
+            filter_func(param)
+
+        return self._results
+
+
 class SportView:
     @staticmethod
     def get_sport(sport_id: int):
         return Sport.new(id=sport_id)
 
     @staticmethod
-    def get_sports_by_regex(pattern: str):
-        for sport_id in get_by_glob("sport", pattern):
-            yield SportView.get_sport(sport_id)
+    def get_sports_filtered(filter_string: str):
+        filter = Filter("sport", filter_string)
+        results = filter.filter()
+        return results
 
 
 class EventView:

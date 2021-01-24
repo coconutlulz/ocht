@@ -20,3 +20,7 @@ class ValidationException(Exception):
 
 class CoercionException(ValidationException):
     pass
+
+
+class FilterException(Exception):
+    pass
