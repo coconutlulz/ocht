@@ -1,6 +1,6 @@
 from logging import getLogger, DEBUG
 
-log = getLogger("CRUD")
+log = getLogger("nodes")
 log.setLevel(DEBUG)
 
 root_node = -1
