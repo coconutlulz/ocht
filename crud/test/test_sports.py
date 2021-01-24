@@ -3,6 +3,7 @@ import unittest
 from crud.crud.controllers import SportController
 from crud.crud.errors import InstantiationException
 from crud.crud.models import Sport, Event, Selection
+from crud.crud.views import SportView
 from crud.test.utils import check_ascii, flush_all_dbs, generate_test_db
 
 
@@ -20,14 +21,31 @@ class TestSportModel(unittest.TestCase):
             )
 
 
-class TestSportsController(unittest.TestCase):
+class TestSportsView(unittest.TestCase):
     def setUp(self):
-        pass
-        #generate_test_db()
+        generate_test_db()
 
     def tearDown(self):
-        pass
-        #flush_all_dbs()
+        flush_all_dbs()
+
+    def test_get_by_glob(self):
+        all_sports = list(SportView.get_sports_by_regex(
+            "Sport"
+        ))
+        self.assertEqual(len(all_sports), 11)
+
+        base_ten_sports = list(SportView.get_sports_by_regex(
+            "^Sport 1+"
+        ))
+        self.assertEqual(len(base_ten_sports), 2)
+
+
+class TestSportsController(unittest.TestCase):
+    def setUp(self):
+        generate_test_db()
+
+    def tearDown(self):
+        flush_all_dbs()
 
     def test_sport_creation(self):
         new_sport = SportController.create_sport("test_sport", active=True)

@@ -8,7 +8,7 @@ def get_random_sport():
     result = connection.execute_command("KEYS", "sport:*")
 
 
-def create_sports(n=10):
+def create_sports(n=11):
     for i in range(0, n):
         sport = Sport.new(name=f"Sport {i}")
         sport.put_model()

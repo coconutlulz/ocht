@@ -10,7 +10,7 @@ from crud.test.utils import check_ascii, flush_all_dbs, generate_test_db
 
 class TestEventModel(unittest.TestCase):
     def setUp(self):
-        pass
+        generate_test_db()
 
     def tearDown(self):
         flush_all_dbs()

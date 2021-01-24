@@ -182,6 +182,14 @@ class Model:
         self._commands = []
         self.put_model()  # FIXME Do not put if the model has just been read from DB.
 
+    def activate(self):
+        self.active = True
+        self.put_model()
+
+    def deactivate(self):
+        self.active = False
+        self.put_model()
+
 
 @dataclass
 class Sport(Model):
@@ -376,3 +384,27 @@ class Selection(Model):
         "price": {"coerce": "custom_round", "min": 0.00},
         "outcome": {"allowed": Outcomes}
     }
+
+    class Read(Model.Read):
+        class Converters(Model.Read.Converters):
+            @staticmethod
+            def active(value):
+                return bool(value)
+
+            @staticmethod
+            def event(value):
+                return int(value)
+
+            @staticmethod
+            def price(value):
+                return float(value)
+
+            @staticmethod
+            def outcome(value):
+                return int(value)
+
+    class Write(Model.Write):
+        class Converters(Model.Write.Converters):
+            @staticmethod
+            def active(value):
+                return int(value)
