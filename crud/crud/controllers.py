@@ -1,7 +1,7 @@
+# -*- coding: utf-8 -*-
 from datetime import datetime
 
 from .models import Event, Selection, Sport
-
 from .views import EventView, SelectionView, SportView
 
 

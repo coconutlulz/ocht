@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 from dataclasses import dataclass, fields
 from enum import EnumMeta
 
