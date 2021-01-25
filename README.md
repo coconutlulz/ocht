@@ -134,7 +134,7 @@ Other errors are found in `crud.errors` and should be relatively self-explanator
 * The only tests are integration tests.
 * SQL is not used as I am more comfortable with key-value stores and felt it would take too much time to re-familiarise myself with SQl.
 * This is largely experimental, as instead of opting for raw commands I've built a bare-bones ORM.
-* The application does **NOT** support transactions. You will see in `crud.database` that I initially opted for a transactional approach but this was taking too long to debug. As a single-user program, a lack of atomicity should be alright for a first verison.
+* The application does **NOT** support transactions. You will see in `crud.database` that I initially opted for a transactional approach but this was taking too long to debug. As a single-user program, a lack of atomicity should be alright for a first version.
   
 ## TODO
 * Expand test coverage.
