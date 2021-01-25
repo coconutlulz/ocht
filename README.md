@@ -137,6 +137,7 @@ Other errors are found in `crud.errors` and should be relatively self-explanator
 * The application does **NOT** support transactions. You will see in `crud.database` that I initially opted for a transactional approach but this was taking too long to debug. As a single-user program, a lack of atomicity should be alright for a first version.
   
 ## TODO
+* I believe there is a logic error in how `set_current_time()` and `get_current_time()` are used (or perhaps, not used). This needs to be fixed.
 * Expand test coverage.
 * Add more comments and more helpful log messages.
 * Validation with Cerberus needs to be expanded to work bidirectionally in order to reduce dependence on converter functions.
